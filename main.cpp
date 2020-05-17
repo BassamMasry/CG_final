@@ -128,6 +128,11 @@ void init(void)
 
     _texture = &_tex_brick1;
   }
+  GLfloat zPlane[] = { 0.0f, 0.0f, 1.0f, 0.0f };
+  glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+  glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+  glTexGenfv(GL_S, GL_OBJECT_PLANE, zPlane);
+  glTexGenfv(GL_T, GL_OBJECT_PLANE, zPlane);
 
   glEnable(GL_LIGHTING);
   // Flip light switch
@@ -173,7 +178,9 @@ void drawfloor(void)
 
   glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
   glEnable(GL_TEXTURE_GEN_T);
+  void glTexGenf(GL_S, )
   glBindTexture(GL_TEXTURE_2D, *_texture);
+
 
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
