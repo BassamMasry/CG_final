@@ -95,7 +95,7 @@ GLuint loadTexture(Image* image) {
       return textureId; //Returns the id of the texture
 }
 
-GLuint* _texture; //The id of the texture
+GLuint* _texture = new GLuint; //The id of the texture
 GLuint _tex_brick1; //The id of the texture
 GLuint _tex_brick2; //The id of the texture
 GLuint _tex_wood1; //The id of the texture
@@ -114,18 +114,19 @@ void init(void)
   // make a local scope to delete these variables after operating
   {
     char path1[] = "res/img/low_res/brick1.bmp";
-    Image* image1 = loadBMP(path);
+    Image* image1 = loadBMP(path1);
     _tex_brick1 = loadTexture(image1);
     char path2[] = "res/img/low_res/brick2.bmp";
-    Image* image2 = loadBMP(path);
+    Image* image2 = loadBMP(path2);
     _tex_brick2 = loadTexture(image2);
     char path3[] = "res/img/low_res/wood1.bmp";
-    Image* image3 = loadBMP(path);
+    Image* image3 = loadBMP(path3);
     _tex_wood1 = loadTexture(image3);
     char path4[] = "res/img/low_res/wood2.bmp";
-    Image* image4 = loadBMP(path);
+    Image* image4 = loadBMP(path4);
     _tex_wood2 = loadTexture(image4);
-    *_texture = _tex_brick1
+
+    _texture = &_tex_brick1;
   }
 
   glEnable(GL_LIGHTING);
@@ -167,9 +168,14 @@ void drawbed(void)
 void drawfloor(void)
 {
   glPushMatrix();
+
   glEnable(GL_TEXTURE_2D);
 
+  glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+  glEnable(GL_TEXTURE_GEN_T);
   glBindTexture(GL_TEXTURE_2D, *_texture);
+
+
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -177,6 +183,8 @@ void drawfloor(void)
   glScalef(50.0f, 50.0f, 0.5f);
   glTranslatef(0.0f,0.0f,20.0f);
   glutSolidCube(1.0f);
+  glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+  glDisable(GL_TEXTURE_GEN_T);
   glDisable(GL_TEXTURE_2D);
   glPopMatrix();
 }
@@ -785,7 +793,25 @@ static void motion(int x, int y)
   glutPostRedisplay();
 }
 
-
+void Textures_menu(int value)
+{
+  switch (value) {
+    case 1:
+      _texture = &_tex_brick1;
+      break;
+    case 2:
+      _texture = &_tex_brick2;
+      break;
+    case 3:
+      _texture = &_tex_wood1;
+      break;
+    case 4:
+      _texture = &_tex_wood2;
+      break;
+    default:
+    break;
+  }
+}
 
 int main(int argc, char **argv)
 {
@@ -801,6 +827,17 @@ int main(int argc, char **argv)
    glutDisplayFunc(display);
    glutKeyboardFunc(keyboard);
    glutSpecialFunc(keySpecial);
+
+   glutCreateMenu(Textures_menu);
+   glutAddMenuEntry("Textures", 0);
+   glutAddMenuEntry("", 0);
+   glutAddMenuEntry("Brick1", 1);
+   glutAddMenuEntry("Brick2", 2);
+   glutAddMenuEntry("Wood1", 3);
+   glutAddMenuEntry("Wood2", 4);
+   glutAttachMenu(GLUT_RIGHT_BUTTON);
+
+
    glutMainLoop();
    return 0;
 }
