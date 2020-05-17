@@ -77,13 +77,57 @@ GLfloat mat_amb_diff[] = {0.643, 0.753, 0.934, 1.0 };
 //GLfloat mat_specular[] = { 0.0, 0.0, 0.0, 1.0 };
 //GLfloat shininess[] = {100.0 };
 
+//Makes the image into a texture, and returns the id of the texture
+GLuint loadTexture(Image* image) {
+      GLuint textureId;
+      glGenTextures(1, &textureId); //Make room for our texture
+      glBindTexture(GL_TEXTURE_2D, textureId); //Tell OpenGL which texture to edit
+      //Map the image to the texture
+      glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
+                               0,                            //0 for now
+                               GL_RGB,                       //Format OpenGL uses for image
+                               image->width, image->height,  //Width and height
+                               0,                            //The border of the image
+                               GL_RGB, //GL_RGB, because pixels are stored in RGB format
+                               GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
+                                                 //as unsigned numbers
+                               image->pixels);               //The actual pixel data
+      return textureId; //Returns the id of the texture
+}
+
+GLuint* _texture; //The id of the texture
+GLuint _tex_brick1; //The id of the texture
+GLuint _tex_brick2; //The id of the texture
+GLuint _tex_wood1; //The id of the texture
+GLuint _tex_wood2; //The id of the texture
+
+
 
 GLfloat angle = 180.0f;   /* in degrees */
 GLfloat angle2 = 90.0f;   /* in degrees */
 
 void init(void)
 {
+  //set background color
   glClearColor(0.94f, 0.66f, 0.54f, 1.0f);
+
+  // make a local scope to delete these variables after operating
+  {
+    char path1[] = "res/img/low_res/brick1.bmp";
+    Image* image1 = loadBMP(path);
+    _tex_brick1 = loadTexture(image1);
+    char path2[] = "res/img/low_res/brick2.bmp";
+    Image* image2 = loadBMP(path);
+    _tex_brick2 = loadTexture(image2);
+    char path3[] = "res/img/low_res/wood1.bmp";
+    Image* image3 = loadBMP(path);
+    _tex_wood1 = loadTexture(image3);
+    char path4[] = "res/img/low_res/wood2.bmp";
+    Image* image4 = loadBMP(path);
+    _tex_wood2 = loadTexture(image4);
+    *_texture = _tex_brick1
+  }
+
   glEnable(GL_LIGHTING);
   // Flip light switch
   glEnable(GL_LIGHT0);
@@ -123,10 +167,17 @@ void drawbed(void)
 void drawfloor(void)
 {
   glPushMatrix();
+  glEnable(GL_TEXTURE_2D);
+
+  glBindTexture(GL_TEXTURE_2D, *_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
   glRotatef(90.0f, 1.0f,0.0f,0.0f);
   glScalef(50.0f, 50.0f, 0.5f);
   glTranslatef(0.0f,0.0f,20.0f);
   glutSolidCube(1.0f);
+  glDisable(GL_TEXTURE_2D);
   glPopMatrix();
 }
 
