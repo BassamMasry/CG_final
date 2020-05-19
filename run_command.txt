@@ -1,2 +1,1 @@
-g++ -o main main.cpp imageloader.cpp glm.cpp -lGL -lglut -lGLU -lm
-
+g++ -o main main.cpp -lGL -lglut -lGLU -lm
