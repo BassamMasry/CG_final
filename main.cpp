@@ -51,7 +51,10 @@
 #include "imageloader.h"
 #include "helpers.h"
 
-static float shoulder = 0.0f, elbow = 0.0f, fingerBase = 0.0f, fingerUp = 0.0f;
+// shoulder flex left and rigth, shoulder abduct left and right
+static float sh_fl = 0.0f, sh_fr = 0.0f, sh_al = -90.0f, sh_ar = 90.0f;
+static float elbow = 0.0f, fingerBase = 0.0f, fingerUp = 0.0f;
+static float torso_f = 0.0f, upperback_f = 0.0f;
 static float hip_r = 0.0f, knee_r = 0.0f, ankle_r = 0.0f, abduct_r = 0.0f;
 static float hip_l = 0.0f, knee_l = 0.0f, ankle_l = 0.0f, abduct_l = 0.0f;
 static double eye[3] = {0.0, 0.0, 20.0}, center[3] = {0.0,0.0,0.0}, up[3] = {0.0,1.0,0.0};;
@@ -66,6 +69,8 @@ char path[] = "res/obj/flowers.obj";
 GLMmodel* flower = glmReadOBJ(path);
 char path2[] = "res/obj/bed.obj";
 GLMmodel* bed = glmReadOBJ(path2);
+char path3[] = "res/obj/wardrobe.obj";
+GLMmodel* ward = glmReadOBJ(path3);
 
 GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
 GLfloat light_diffuse[] = { 1.0, 1.0, 1.0,1.0 };
@@ -105,6 +110,266 @@ GLuint _tex_wood2; //The id of the texture
 
 GLfloat angle = 180.0f;   /* in degrees */
 GLfloat angle2 = 90.0f;   /* in degrees */
+
+// using keyframe method
+bool play = false;
+bool repeat = true;
+
+float offset_x = 0, offset_y = 0, offset_z = 0;
+
+float anim1_sh_fl[200];
+float anim1_sh_fr[200];
+float anim1_hip_l[200];
+float anim1_hip_r[200];
+
+float anim2_torso[270];
+float anim2_upperback[270];
+float anim2_sh_fl[270];
+float anim2_sh_fr[270];
+
+float anim3_posx[200];
+float anim3_posy[200];
+float anim3_posz[200];
+float anim3_hip[90];
+float anim3_knee[90];
+
+void reset(int x)
+{
+  sh_fl = 0.0f, sh_fr = 0.0f, sh_al = -90.0f, sh_ar = 90.0f;
+  hip_r = 0.0f, knee_r = 0.0f, ankle_r = 0.0f, abduct_r = 0.0f;
+  hip_l = 0.0f, knee_l = 0.0f, ankle_l = 0.0f, abduct_l = 0.0f;
+  torso_f = 0.0f, upperback_f = 0.0f, elbow = 0.0f;
+  offset_x = 0.0f, offset_y = 0.0f, offset_z = 0.0f;
+}
+
+void init_anim1(void)
+{
+  // init shoulders
+  for (int i = 0; i < 30; ++i)
+  {
+    // from 70 to 40
+    anim1_sh_fl[i] = 70 - i;
+    // from 110 to 140
+    anim1_sh_fr[i] = 110 + i;
+    // from 20 to 50
+    anim1_hip_l[i] = 20 + i;
+    // from -20 to -50
+    anim1_hip_r[i] = -20 - i;
+  }
+  for (int i =30; i < 60; ++i)
+  {
+    // from 40 to 70
+    anim1_sh_fl[i] = 10 + i;
+    // from 140 to 110
+    anim1_sh_fr[i] = 170 - i;
+    // from 50 to 20
+    anim1_hip_l[i] = 80 - i;
+    // from -50 to -20
+    anim1_hip_r[i] = -80 + i;
+  }
+  for(int i = 60; i< 100; ++i)
+  {
+    // from 70 to 110
+    anim1_sh_fl[i] = 10 + i;
+    // from 110 to 70
+    anim1_sh_fr[i] = 170 - i;
+    // from 20 to -20
+    anim1_hip_l[i] = 80 - i;
+    // from -20 to 20
+    anim1_hip_r[i] = -80 + i;
+  }
+  for(int i = 100; i< 130; ++i)
+  {
+    // from 110 to 140
+    anim1_sh_fl[i] = 10 + i;
+    // from 70 to 40
+    anim1_sh_fr[i] = 170 - i;
+    // from -20 to -50
+    anim1_hip_l[i] = 80 - i;
+    // from 20 to 50
+    anim1_hip_r[i] = -80 + i;
+  }
+  for(int i = 130; i < 160; ++i)
+  {
+    // from 140 to 110
+    anim1_sh_fl[i] = 270 - i;
+    // from 40 to 70
+    anim1_sh_fr[i] = -90 + i;
+    // from -50 to -20
+    anim1_hip_l[i] = -180 + i;
+    // from 50 to 20
+    anim1_hip_r[i] = 180 - i;
+  }
+  for(int i = 160; i < 200; ++i)
+  {
+    // from 110 to 70
+    anim1_sh_fl[i] = 270 - i;
+    // from 70 to 110
+    anim1_sh_fr[i] = -90 + i;
+    // from -20 to 20
+    anim1_hip_l[i] = -180 + i;
+    // from 20 to -20
+    anim1_hip_r[i] = 180 - i;
+  }
+}
+
+void init_anim2(void)
+{
+  for(int i = 0; i < 60; ++i)
+  {
+    // from 0 to -60
+    anim2_torso[i] = -i;
+    anim2_upperback[i] = -i;
+    anim2_sh_fl[i] = 0;
+    anim2_sh_fr[i] = 0;
+  }
+  for(int i = 60; i < 80; ++i)
+  {
+    // from -60 to -40
+    anim2_torso[i] = -120 + i;
+    anim2_upperback[i] = -120 + i;
+    anim2_sh_fl[i] = 0;
+    anim2_sh_fr[i] = 0;
+  }
+  for(int i = 80; i < 100; ++i)
+  {
+    // from -40 to -60
+    anim2_torso[i] = 40 - i;
+    anim2_upperback[i] = 40 - i;
+    anim2_sh_fl[i] = 0;
+    anim2_sh_fr[i] = 0;
+  }
+  for(int i = 100; i < 160; ++i)
+  {
+    // from -60 to 0
+    anim2_torso[i] = -160 + i;
+    anim2_upperback[i] = -160 + i;
+    anim2_sh_fl[i] = 0;
+    anim2_sh_fr[i] = 0;
+  }
+  for(int i = 160; i < 205; ++i)
+  {
+    anim2_torso[i] = 0;
+    anim2_upperback[i] = 0;
+    anim2_sh_fl[i] = 320 -2 * i;
+    anim2_sh_fr[i] = anim2_sh_fl[i];
+  }
+  for(int i = 205; i < 215; ++i)
+  {
+    anim2_torso[i] = 0;
+    anim2_upperback[i] = 0;
+    anim2_sh_fl[i] = -500 + 2 * i;
+    anim2_sh_fr[i] = anim2_sh_fl[i];
+  }
+  for(int i = 215; i < 225; ++i)
+  {
+    anim2_torso[i] = 0;
+    anim2_upperback[i] = 0;
+    anim2_sh_fl[i] = 360 -2 * i;
+    anim2_sh_fr[i] = anim2_sh_fl[i];
+  }
+  for(int i = 225; i < 270; ++i)
+  {
+    anim2_torso[i] = 0;
+    anim2_upperback[i] = 0;
+    anim2_sh_fl[i] = -540 + 2 * i;
+    anim2_sh_fr[i] = anim2_sh_fl[i];
+  }
+}
+
+void init_anim3(void)
+{
+  for(int i = 0; i < 200; ++i)
+  {
+    anim3_posx[i] = -(float)i/13.3333;
+    anim3_posy[i] = -(float)i/16.6666;
+  }
+  for(int i = 0; i < 90; ++i)
+  {
+    anim3_hip[i] = i;
+    anim3_knee[i] = -i;
+    anim3_posz[i] = -(float)i/25;
+  }
+}
+
+void play_anim1(int frame)
+{
+  sh_fl = anim1_sh_fl[frame];
+  sh_fr = anim1_sh_fr[frame];
+  hip_l = anim1_hip_l[frame];
+  hip_r = anim1_hip_r[frame];
+}
+
+void play_anim2(int frame)
+{
+  torso_f = anim2_torso[frame];
+  upperback_f = anim2_upperback[frame];
+  sh_fl = anim2_sh_fl[frame];
+  sh_fr = anim2_sh_fr[frame];
+}
+
+void play_anim3(int frame)
+{
+  if (frame < 200)
+  {
+    offset_x = anim3_posx[frame];
+    offset_y = anim3_posy[frame];
+  }
+  if (frame > 199)
+  {
+    sh_fl = 70;
+    sh_fr = 70;
+    hip_l = anim3_hip[frame-200];
+    hip_r = anim3_hip[frame-200];
+    knee_l = anim3_knee[frame-200];
+    knee_r = anim3_knee[frame-200];
+    offset_z = anim3_posz[frame-200];
+  }
+}
+
+void Timer1(int t)
+{
+  play_anim1(t);
+  glutPostRedisplay();
+  // play at 60 frames per second
+  if(play)
+    if(t < 200)
+      glutTimerFunc(16.66, Timer1, t+1);
+    else
+      if(repeat)
+        Timer1(0);
+}
+
+void Timer2(int t)
+{
+  play_anim2(t);
+  glutPostRedisplay();
+  // play at 60 frames per second
+  if(play)
+    if(t < 270)
+      glutTimerFunc(16.66, Timer2, t+1);
+    else
+      Timer2(0);
+}
+
+void Timer3(int t)
+{
+  play_anim3(t);
+  glutPostRedisplay();
+  // play at 60 frames per second
+  if(play)
+    if(t < 289)
+      glutTimerFunc(16.66, Timer3, t+1);
+
+}
+
+void setplay(int t)
+{
+  if(t == 0)
+    play = true;
+  else
+    play = false;
+}
 
 void init(void)
 {
@@ -168,6 +433,16 @@ void drawbed(void)
 		glmDraw(bed, GLM_SMOOTH | GLM_MATERIAL);
 }
 
+void drawward(void)
+{
+		glmUnitize(ward);
+		glmFacetNormals(ward);
+		glmVertexNormals(ward, 90.0);
+		glmScale(ward, 8);
+		glmDraw(ward, GLM_SMOOTH | GLM_MATERIAL);
+}
+
+
 void drawfloor(void)
 {
   glPushMatrix();
@@ -200,6 +475,7 @@ void torso(void)
   // any rotation and translation should be made here in this line
   glPushMatrix();
   glColor3ub (0, 255, 0);
+  glTranslatef (0.0f, 0.0f, 2.0f);
   glScalef(4.0f, 1.0f, 3.0f);
   glutSolidCube(1.0f);
 
@@ -211,6 +487,8 @@ void torso(void)
 void upperback(void)
 {
   glTranslatef(0.0f, 0.0f, 3.0f);
+  glRotatef ((GLfloat) upperback_f, 1.0f,0.0f, 0.0f);
+  glTranslatef (0.0f, 0.0f, 2.0f);
   glPushMatrix();
   glColor3ub (0, 255, 0);
   glScalef(4.0f, 1.0f, 3.0f);
@@ -232,8 +510,21 @@ void head(void)
 // the shoulder is the parent of elbows
 void shoulders(GLfloat scale = 1.0f)
 {
-  glTranslatef (scale * 2.3f, 0.0f, 2.0f);
-  glRotatef ((GLfloat) scale * shoulder, 0.0f, 1.0f, 0.0f);
+  float* abd;
+  float* flex;
+  if (scale == 1.0f)
+  {
+    flex = &sh_fr;
+    abd = &sh_ar;
+  }else
+  {
+    flex = &sh_fl;
+    abd = &sh_al;
+  }
+  glTranslatef (scale * 2.3f, 0.0f, 1.0f);
+  glRotatef ((GLfloat) *abd, 0.0f,0.0f, 1.0f);
+  glRotatef ((GLfloat) scale * (*flex), 0.0f, 1.0f, 0.0f);
+
   glTranslatef (scale * 1.2f, 0.0f, 0.0f);
   glPushMatrix();
   glScalef (3.0f, 0.6f, 1.0f);
@@ -475,6 +766,13 @@ void display(void)
    drawbed();
    glPopMatrix();
 
+   // draw wardrobe
+   glPushMatrix();
+   glTranslatef(20.0f, -2.0f, 15.0f);
+   glRotatef(90,0.0f,1.0f,0.0f);
+   drawward();
+   glPopMatrix();
+
    glPopMatrix();
 
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
@@ -482,12 +780,21 @@ void display(void)
 
 
    // start of making body
-   // make torso
-   torso();
+
+   // global moving
+   glTranslatef(offset_x,offset_y,offset_z);
 
    // make a new hierarchy for upper body
+   // make torso
    glPushMatrix();
+
+   glTranslatef (0.0f, 0.0f, -2.0f);
+   glRotatef ((GLfloat) torso_f, 1.0f,0.0f, 0.0f);
+   torso();
+   glTranslatef (0.0f, 0.0f, 2.0f);
+
    // make upper back
+   glTranslatef (0.0f, 0.0f, -2.0f);
    upperback();
    //make head
    head();
@@ -566,18 +873,50 @@ void keyboard(unsigned char key, int x, int y)
 {
    switch (key)
    {
+     case '1':
+      play = false;
+      reset(0);
+      glutTimerFunc(16,reset,0);
+      glutTimerFunc(16,setplay,0);
+      repeat = true;
+      glutTimerFunc(16,Timer1,0);
+      break;
+
+     case '2':
+     play = false;
+     reset(0);
+     glutTimerFunc(16,reset,0);
+     glutTimerFunc(16,setplay,0);
+     glutTimerFunc(16,Timer2,0);
+     break;
+
+     case '3':
+     play = false;
+     reset(0);
+     glutTimerFunc(16,reset,0);
+     glutTimerFunc(16,setplay,0);
+     repeat = false;
+     glutTimerFunc(16,Timer1,0);
+     glutTimerFunc(16,Timer3,0);
+     break;
+
+     case 'r':
+      play = false;
+      glutTimerFunc(16,reset,0);
+      break;
+
    case 's':
-      shoulder += 5;
-      if (shoulder > 90)
+      sh_fl += 5;
+      if (sh_fl > 90)
   		{
-  			shoulder = 90;
+  			sh_fl = 90;
   		}
       break;
    case 'S':
-      shoulder -= 5;
-      if (shoulder < -90)
+      sh_fl -= 5;
+      if (sh_fl < -90)
   		{
-  			shoulder = -90;
+  			sh_fl = -90;
   		}
       break;
    case 'e':
@@ -723,7 +1062,7 @@ void keySpecial(int key, int x, int y)
 {
    switch (key)
    {
-     case GLUT_KEY_UP:
+     case GLUT_KEY_LEFT:
      if (b_zoom)
      {
        zoom(zoom_speed);
@@ -733,7 +1072,7 @@ void keySpecial(int key, int x, int y)
      }
      break;
 
-     case GLUT_KEY_DOWN:
+     case GLUT_KEY_RIGHT:
      if (b_zoom)
      {
        zoom(-zoom_speed);
@@ -746,7 +1085,7 @@ void keySpecial(int key, int x, int y)
      default:
      break;
 
-     case GLUT_KEY_LEFT:
+     case GLUT_KEY_UP:
      if (b_zoom)
      {
        move(move_speed);
@@ -756,7 +1095,7 @@ void keySpecial(int key, int x, int y)
      }
      break;
 
-     case GLUT_KEY_RIGHT:
+     case GLUT_KEY_DOWN:
      if (b_zoom)
      {
        move(-move_speed);
@@ -824,6 +1163,9 @@ int main(int argc, char **argv)
    glutInitWindowSize(500, 500);
    glutInitWindowPosition(100, 100);
    glutCreateWindow("My room");
+   init_anim1();
+   init_anim2();
+   init_anim3();
    init();
    glutMouseFunc(mouse);
    glutMotionFunc(motion);
@@ -840,7 +1182,6 @@ int main(int argc, char **argv)
    glutAddMenuEntry("Wood1", 3);
    glutAddMenuEntry("Wood2", 4);
    glutAttachMenu(GLUT_RIGHT_BUTTON);
-
 
    glutMainLoop();
    return 0;
